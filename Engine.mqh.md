@@ -139,3 +139,94 @@ void OnChartEvent(const int id, const long& lparam, const double& dparam, const 
 - ✅ **优化资源管理**（避免内存泄漏）  
 
 适用于 **EA 交易、UI 界面开发、指标数据分析** 等场景。建议结合示例代码学习，以快速掌握其使用方法。 🚀
+
+在使用 **Mql5DoEasy** 库时，是否需要额外包含其他头文件，取决于你的具体需求。以下是详细说明：
+
+---
+
+### **1. 基础使用（仅依赖 `Engine.mqh`）**
+如果只需要 **核心交易功能、账户管理、基础UI控件**，通常只需包含 `Engine.mqh`，因为引擎会自动初始化子模块：
+```mql5
+#include <Mql5DoEasy\Engine.mqh>
+CEngine engine; // 自动加载Trade、Account等子模块
+
+void OnInit() {
+    engine.OnInit(); // 初始化所有功能
+    engine.Trade().PositionOpen(...); // 直接调用交易功能
+}
+```
+✅ **无需额外包含**：`Trade.mqh`、`AccountInfo.mqh` 等基础模块已通过引擎集成。
+
+---
+
+### **2. 需要额外包含的情况**
+#### **(1) 使用高级UI控件**
+如果用到 **非标准控件**（如自定义图表、复杂布局），需手动包含对应头文件：
+```mql5
+#include <Mql5DoEasy\Engine.mqh>
+#include <Mql5DoEasy\Objects\Graph\Controls\ListView.mqh> // 高级列表控件
+#include <Mql5DoEasy\Objects\Graph\Controls\Chart.mqh>    // 自定义图表
+
+CEngine engine;
+CListView *listView;
+
+void OnInit() {
+    engine.OnInit();
+    listView = new CListView();
+    listView.Create("数据列表", 10, 10, 300, 200, engine.GetMainWindow());
+}
+```
+
+#### **(2) 使用扩展功能模块**
+部分 **高级功能**（如自定义指标分析、网络请求）需要单独引用：
+```mql5
+#include <Mql5DoEasy\Engine.mqh>
+#include <Mql5DoEasy\DataIndicators.mqh> // 自定义指标分析
+#include <Mql5DoEasy\Net\HttpClient.mqh>  // HTTP客户端
+
+CEngine engine;
+CHttpClient http;
+
+void OnInit() {
+    engine.OnInit();
+    http.Get("https://api.example.com/data"); // 发送网络请求
+}
+```
+
+#### **(3) 直接调用底层类**
+如果想绕过引擎直接使用某个模块（如独立使用 `CTradeEx` 而非 `engine.Trade()`）：
+```mql5
+#include <Mql5DoEasy\Trade.mqh> // 直接引用交易模块
+CTradeEx trade;
+
+void OnInit() {
+    trade.PositionOpen(...); // 直接操作
+}
+```
+
+---
+
+### **3. 推荐做法**
+1. **优先通过 `Engine.mqh` 调用**  
+   引擎已集成大部分功能，避免手动管理多个模块的初始化顺序。
+
+2. **按需包含**  
+   仅在需要 **特定扩展功能** 时额外包含对应文件，例如：
+   - `Chart.mqh` → 高级图表绘制  
+   - `DateTime.mqh` → 复杂时间处理  
+   - `FileIO.mqh` → 文件读写  
+
+3. **参考官方示例**  
+   库中的 `Examples` 文件夹通常演示了不同功能所需的头文件组合。
+
+---
+
+### **4. 总结**
+| **使用场景**               | **所需头文件**                                                                 |
+|----------------------------|------------------------------------------------------------------------------|
+| 基础交易、账户管理         | 仅需 `#include <Mql5DoEasy\Engine.mqh>`                                      |
+| 高级UI控件（如ListView）   | 额外包含对应控件头文件（如 `ListView.mqh`）                                  |
+| 自定义指标分析             | 额外包含 `DataIndicators.mqh`                                               |
+| 直接调用底层模块           | 直接包含目标模块（如 `Trade.mqh`），但需自行管理初始化                       |
+
+**建议始终以 `Engine.mqh` 为主入口**，仅在引擎未覆盖特定功能时补充其他头文件。
